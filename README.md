@@ -52,14 +52,14 @@ If `options.comments` is not set, than a string is used as comment.
 | `comments`    | *number* | Position of the argument containing the comments string or object   |
 
 ###### <a id="comment-options"></a>Comment Options
-If ommitted the comment has to be a string. Otherwise, the comment has to be an object.
+If ommitted the comment is expected to be a string. Otherwise, the comment has to be an object.
 
 | Name                 | Type      | Default   | Details                                                               |
 |----------------------|-----------|-----------|-----------------------------------------------------------------------|
 | `commentString`      | *string*  | `comment` | key for providing plain comments                                      |
 | `props`              | *object*  |           | each key under has an value of an array with two strings. These strings are wrapped around each property of an object provided under this key. |
-| `throwWhenMalformed` | *boolean* | `true`    | If set to `true`, throws an error when in comment object any value is not a plain string |
-| `fallback`           | *boolean* | `true`    | If set to `true`, fallbacks to next argument if argument is optional and next argument is of different type|
+| `throwWhenMalformed` | *boolean* | `true`    | If set to `true`, throws an error when in the comment object any value is not a plain string |
+| `fallback`           | *boolean* | `true`    | If set to `true`, an omitted argument fallbacks to the next argument if the next argument is of different type|
 
 ###### <a id="content-options"></a>Content Options
 | Name                  | Type                    | Default   | Details                                                |
@@ -93,7 +93,9 @@ const string1 = (worldPlace: string) => _(
         PLACE: worldPlace
     }
 );
-// omit last argument
+// when ommiting second argument the third argument can take the place of the second argument 
+// if the arguments are of different type. If there are more arguments, they also change their
+// place accordingly.
 const string2 = _(
     'Foo',
     {
