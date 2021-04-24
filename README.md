@@ -105,7 +105,7 @@ const string3 = _(
     'Plural',
     'Context'
 );
-// skip textPlural and comment object
+// skip textPlural and comment object, allowed placeholders are `null`, `undefined` or `0`
 const string4 = _(
     'Foo3',
     null,
