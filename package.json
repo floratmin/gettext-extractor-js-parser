@@ -1,5 +1,5 @@
 {
-  "name": "gettext-extractor-js-parser",
+  "name": "@floratmin/gettext-extractor-js-parser",
   "version": "1.0.0",
   "description": "JS Extractor for gettext-extractor",
   "main": "dist/index.js",
