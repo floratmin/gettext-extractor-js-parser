@@ -34,8 +34,10 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     }
                 });
                 // First comment, than other, props and keyed comments.
-                parser.parseString(`t('Foo', {comment: 'My Comment', props: { prop1: 'Prop1 is prop1', prop2: 'Prop2 is prop2'}, other: 'other comment', keyed: {single: 'Single key comment', key1: {key2: 'This is a keyed comment'}}})`);
-                parser.parseString(`t('Foo', {comment: 'My\\nComment', props: { prop1: 'Prop1 is\\nprop1'}, other: 'other\\ncomment', keyed: {single: 'Single\\nkey comment'}})`);
+                parser.parseString(`t('Foo', {comment: 'My Comment', props: { prop1: 'Prop1 is prop1', prop2: 'Prop2 is prop2'}, other: 'other comment',`
+                    + ` keyed: {single: 'Single key comment', key1: {key2: 'This is a keyed comment'}}})`);
+                parser.parseString(`t('Foo', {comment: 'My\\nComment', props: { prop1: 'Prop1 is\\nprop1'}, other: 'other\\ncomment',`
+                    + ` keyed: {single: 'Single\\nkey comment'}})`);
 
                 expect(messages).toEqual([
                     {
