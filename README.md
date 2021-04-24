@@ -59,6 +59,9 @@ If ommitted the comment is expected to be a string. Otherwise, the comment has t
 | `throwWhenMalformed` | *boolean* | `true`    | If set to `true`, throws an error when in the comment object any value is not a plain string |
 | `fallback`           | *boolean* | `true`    | If set to `true`, an omitted argument fallbacks to the next argument if the next argument is of different type|
 
+If not trough commentString or props specified keys are used in the comment object, then these keys (concatenated with dots when they are nested) are added
+to the comments with a semicolon followed by the value of the key.
+
 ##### <a id="content-options"></a>Content Options
 | Name                  | Type                    | Default   | Details                                                |
 |-----------------------|-------------------------|-----------|--------------------------------------------------------|
