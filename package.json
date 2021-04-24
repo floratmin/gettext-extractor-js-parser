@@ -1,9 +1,14 @@
 {
   "name": "@floratmin/gettext-extractor-js-parser",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "JS Extractor for gettext-extractor",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/",
+    "LICENSE.md",
+    "README.md"
+  ],
   "scripts": {
     "watch": "tsc -w",
     "build": "tsc",
