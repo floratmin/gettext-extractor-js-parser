@@ -30,11 +30,9 @@ extractor
     .parseFilesGlob('src/**/*.@(ts|js|tsx|jsx)');
 ```
 
-If `options.comments` is not set, than a string is used as comment.
-
 ### `callExpressionExtractor(calleeName, options)`
 
-##### Parameters
+#### Parameters
 | Name          | Type   | Details                                                                 |
 |---------------|--------|-------------------------------------------------------------------------|
 | `calleeName`  | *string* or<br>*string[]* | **Required** · Name(s) of the function(s)            |
@@ -43,7 +41,7 @@ If `options.comments` is not set, than a string is used as comment.
 | → `comments`  | *object*                  | See [Comment Options](#comment-options) below                          |
 | → `content`   | *object*                  | See [Content Options](#content-options) below                          |
 
-###### <a id="argument-mapping"></a>Argument Mapping
+##### <a id="argument-mapping"></a>Argument Mapping
 | Name        | Type   |                                                                         |
 |-------------|--------|-------------------------------------------------------------------------|
 | `text`        | *number* | **Required** · Position of the argument containing the message text |
@@ -51,17 +49,17 @@ If `options.comments` is not set, than a string is used as comment.
 | `context`     | *number* | Position of the argument containing the message context             |
 | `comments`    | *number* | Position of the argument containing the comments string or object   |
 
-###### <a id="comment-options"></a>Comment Options
+##### <a id="comment-options"></a>Comment Options
 If ommitted the comment is expected to be a string. Otherwise, the comment has to be an object.
 
 | Name                 | Type      | Default   | Details                                                               |
 |----------------------|-----------|-----------|-----------------------------------------------------------------------|
-| `commentString`      | *string*  | `comment` | key for providing plain comments                                      |
-| `props`              | *object*  |           | each key under has an value of an array with two strings. These strings are wrapped around each property of an object provided under this key. |
+| `commentString`      | *string*  | `comment` | Key for providing plain comments                                      |
+| `props`              | *object*  |           | Each key under `props` has a value of an array with two strings. In the comment object we can provide key value pairs under each key defined under `props`. Each of these keys gets wrapped in between the provided two strings. Then after a semicolon the value is concatenated. |
 | `throwWhenMalformed` | *boolean* | `true`    | If set to `true`, throws an error when in the comment object any value is not a plain string |
 | `fallback`           | *boolean* | `true`    | If set to `true`, an omitted argument fallbacks to the next argument if the next argument is of different type|
 
-###### <a id="content-options"></a>Content Options
+##### <a id="content-options"></a>Content Options
 | Name                  | Type                    | Default   | Details                                                |
 |-----------------------|-------------------------|-----------|--------------------------------------------------------|
 | `trimWhiteSpace`      | *boolean*               | `false`   | If set to `true`, white space at the very beginning and at the end of the content will get removed<br>Normally this behaves like `.trim()`, however if `preseveIndentation` is `true`, the indentation of the first line is kept as well.|
@@ -93,7 +91,7 @@ const string1 = (worldPlace: string) => _(
         PLACE: worldPlace
     }
 );
-// when ommiting second argument the third argument can take the place of the second argument 
+// when omitting the second argument the third argument can take the place of the second argument 
 // if the arguments are of different type. If there are more arguments, they also change their
 // place accordingly.
 const string2 = _(
