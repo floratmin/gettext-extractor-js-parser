@@ -3,7 +3,8 @@
 Extract comments provided by a string or an object in the translator function.
 
 ```ts
-import { callExpressionExtractor, ICustomJsExtractorOptions } from '@floratmin/gettext-extractor-js-parser';
+import { callExpressionExtractor, ICustomJsExtractorOptions } 
+    from '@floratmin/gettext-extractor-js-parser';
 import { GettextExtractor } from 'gettext-extractor';
 
 const options: ICustomJsExtractorOptions = {
