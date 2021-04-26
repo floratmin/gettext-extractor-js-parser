@@ -3518,11 +3518,13 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t({comment: 'My Comment'}, 'Foo')`);
                     parser.parseString(`t({comment: 'My Comment'}, 'Foo2', 'Bar')`);
                     parser.parseString(`t( null, 'Foo3')`);
-                    parser.parseString(`t( variable, 'Foo4')`);
-                    // fallback
-                    parser.parseString(`t('Foo5')`);
+                    // comment string
+                    parser.parseString(`t( 'My Comment', 'Foo4')`);
                     // invalid
+                    parser.parseString(`t( variable, 'Foo4')`);
+                    parser.parseString(`t( 'My Comment')`);
                     parser.parseString(`t({comment: 'My Comment'}, other)`);
+                    parser.parseString(`t('My Comment', other)`); // comment string
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
 
@@ -3537,6 +3539,10 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             text: 'Foo3'
+                        },
+                        {
+                            comments: ['My Comment'],
+                            text: 'Foo4'
                         }
                     ]);
                 });
@@ -3558,14 +3564,17 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t('Foo3', 'Plural')`);
                     parser.parseString(`t('Foo4', null, {comment: 'Comment'})`);
                     parser.parseString(`t('Foo5')`);
-                    // fallback
-                    parser.parseString(`t('Foo6', {comment: 'Comment'})`);
+                    // comment string
+                    parser.parseString(`t('Foo6', 'Plural', 'Comment')`);
+                    parser.parseString(`t('Foo7', null, 'Comment')`);
                     // partial
-                    parser.parseString(`t('Foo7', 'Plural', other)`);
-                    parser.parseString(`t('Foo8', other)`);
+                    parser.parseString(`t('Foo8', 'Plural', other)`);
+                    parser.parseString(`t('Foo9', other)`);
                     // invalid
                     parser.parseString(`t( null, 'Plural', {comment: 'Comment'})`);
                     parser.parseString(`t( null, {comment: 'Comment'})`);
+                    parser.parseString(`t( null, 'Plural', 'Comment')`); // comment string
+                    parser.parseString(`t( null, 'Comment')`); // comment string
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
 
@@ -3592,14 +3601,20 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             text: 'Foo5'
                         },
                         {
-                            text: 'Foo6'
+                            text: 'Foo6',
+                            textPlural: 'Plural',
+                            comments: ['Comment']
                         },
                         {
                             text: 'Foo7',
+                            comments: ['Comment']
+                        },
+                        {
+                            text: 'Foo8',
                             textPlural: 'Plural'
                         },
                         {
-                            text: 'Foo8'
+                            text: 'Foo9'
                         }
                     ]);
                 });
@@ -3619,13 +3634,16 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t('Foo3', {comment: 'Comment'})`);
                     parser.parseString(`t('Foo4', null, 'Plural')`);
                     parser.parseString(`t('Foo5')`);
-                    // fallback
-                    parser.parseString(`t('Foo6', 'Plural')`);
+                    // comment string
+                    parser.parseString(`t('Foo6', 'Comment', 'Plural')`);
+                    parser.parseString(`t('Foo7', 'Comment')`);
                     // partial
-                    parser.parseString(`t('Foo7', {comment: 'Comment'}, other)`);
-                    parser.parseString(`t('Foo8', other)`);
+                    parser.parseString(`t('Foo8', {comment: 'Comment'}, other)`);
+                    parser.parseString(`t('Foo9', other)`);
+                    parser.parseString(`t('Foo10', 'Comment', other)`); // comment string
                     // invalid
                     parser.parseString(`t(null, {comment: 'Comment'}, 'Plural')`);
+                    parser.parseString(`t(null, 'Comment', 'Plural')`); // comment string
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
 
@@ -3652,14 +3670,24 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             text: 'Foo5'
                         },
                         {
-                            text: 'Foo6'
+                            text: 'Foo6',
+                            comments: ['Comment'],
+                            textPlural: 'Plural'
                         },
                         {
                             text: 'Foo7',
                             comments: ['Comment']
                         },
                         {
-                            text: 'Foo8'
+                            text: 'Foo8',
+                            comments: ['Comment']
+                        },
+                        {
+                            text: 'Foo9'
+                        },
+                        {
+                            text: 'Foo10',
+                            comments: ['Comment']
                         }
                     ]);
                 });
@@ -3679,12 +3707,12 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t('Context', null, 'Foo3')`);
                     parser.parseString(`t( null, {comment: 'Comment'}, 'Foo4')`);
                     parser.parseString(`t( null, null, 'Foo5')`);
-                    // fallback
-                    parser.parseString(`t('Context', 'Foo6')`);
-                    parser.parseString(`t(null, 'Foo7')`);
-                    parser.parseString(`t({comment: 'Comment'}, 'Foo8')`);
+                    // comment string
+                    parser.parseString(`t('Context', 'Comment', 'Foo6')`);
+                    parser.parseString(`t( null, 'Comment', 'Foo7')`);
                     // invalid
                     parser.parseString(`t('Context', {comment: 'Comment'}, options)`);
+                    parser.parseString(`t('Context', 'Comment', options)`); // comment string
                     parser.parseString(`t('Context')`);
                     parser.parseString(`t(options)`);
                     parser.parseString(`t()`);
@@ -3710,6 +3738,15 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             text: 'Foo5'
+                        },
+                        {
+                            context: 'Context',
+                            comments: ['Comment'],
+                            text: 'Foo6'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo7'
                         }
                     ]);
                 });
@@ -3729,14 +3766,16 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t({comment: 'Comment'}, 'Foo3')`);
                     parser.parseString(`t( null, 'Foo4', 'Plural')`);
                     parser.parseString(`t( null, 'Foo5')`);
-                    // fallback
-                    parser.parseString(`t( 'Foo6', 'Plural')`);
-                    parser.parseString(`t( 'Foo7')`);
+                    // comment string
+                    parser.parseString(`t('Comment', 'Foo6', 'Plural')`);
+                    parser.parseString(`t('Comment', 'Foo7')`);
                     // partial
                     parser.parseString(`t({comment: 'Comment'}, 'Foo8', other)`);
                     parser.parseString(`t(null, 'Foo9', other)`);
+                    parser.parseString(`t('Comment', 'Foo10', other)`); // comment string
                     // invalid
                     parser.parseString(`t({comment: 'Comment'}, other)`);
+                    parser.parseString(`t('Comment', other)`); // comment string
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
 
@@ -3764,10 +3803,23 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             comments: ['Comment'],
+                            text: 'Foo6',
+                            textPlural: 'Plural'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo7',
+                        },
+                        {
+                            comments: ['Comment'],
                             text: 'Foo8'
                         },
                         {
                             text: 'Foo9'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo10'
                         }
                     ]);
                 });
@@ -3788,10 +3840,13 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t( null, 'Plural', 'Foo4')`);
                     parser.parseString(`t( null, null, 'Foo5')`);
                     // fallback
-                    parser.parseString(`t( 'Plural', 'Foo7')`);
+                    parser.parseString(`t('Comment', 'Plural', 'Foo6')`);
+                    parser.parseString(`t('Comment', null, 'Foo7')`);
                     // invalid
                     parser.parseString(`t({comment: 'Comment'}, 'Plural', other)`);
                     parser.parseString(`t({comment: 'Comment'}, other)`);
+                    parser.parseString(`t('Comment', 'Plural', other)`); // comment string
+                    parser.parseString(`t('Comment', other)`); // comment string
                     parser.parseString(`t(other)`);
                     parser.parseString(`t( null, 'Plural')`);
 
@@ -3816,6 +3871,15 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             text: 'Foo5'
+                        },
+                        {
+                            comments: ['Comment'],
+                            textPlural: 'Plural',
+                            text: 'Foo6'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo7'
                         }
                     ]);
                 });
@@ -3841,17 +3905,19 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t('Foo6', null, 'Context')`);
                     parser.parseString(`t('Foo7', null, null, {comment: 'Comment'})`);
                     parser.parseString(`t('Foo8')`);
-                    // fallback
-                    parser.parseString(`t('Foo9', 'Plural', {comment: 'Comment'})`);
-                    parser.parseString(`t('Foo10', {comment: 'Comment'})`);
-                    parser.parseString(`t('Foo11', null, {comment: 'Comment'})`);
+                    // comment string
+                    parser.parseString(`t('Foo9', 'Plural', 'Context', 'Comment')`);
+                    parser.parseString(`t('Foo10', 'Plural', null, 'Comment')`);
+                    parser.parseString(`t('Foo11', null, 'Context', 'Comment')`);
+                    parser.parseString(`t('Foo12', null, null, 'Comment')`);
                     // partial
-                    parser.parseString(`t('Foo12', 'Plural', 'Context', other)`);
-                    parser.parseString(`t('Foo13', null, 'Context', other)`);
-                    parser.parseString(`t('Foo14', 'Plural', other)`);
-                    parser.parseString(`t('Foo15', other)`);
+                    parser.parseString(`t('Foo13', 'Plural', 'Context', other)`);
+                    parser.parseString(`t('Foo14', null, 'Context', other)`);
+                    parser.parseString(`t('Foo15', 'Plural', other)`);
+                    parser.parseString(`t('Foo16', other)`);
                     // invalid
                     parser.parseString(`t(null, 'Plural', 'Context', {comment: 'Comment'})`);
+                    parser.parseString(`t(null, 'Plural', 'Context', 'Comment')`); // comment string
                     parser.parseString(`t(options)`);
                     parser.parseString(`t()`);
 
@@ -3894,29 +3960,39 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             text: 'Foo9',
-                            textPlural: 'Plural'
+                            textPlural: 'Plural',
+                            context: 'Context',
+                            comments: ['Comment']
                         },
                         {
-                            text: 'Foo10'
+                            text: 'Foo10',
+                            textPlural: 'Plural',
+                            comments: ['Comment']
                         },
                         {
-                            text: 'Foo11'
+                            text: 'Foo11',
+                            context: 'Context',
+                            comments: ['Comment']
                         },
                         {
                             text: 'Foo12',
+                            comments: ['Comment']
+                        },
+                        {
+                            text: 'Foo13',
                             textPlural: 'Plural',
                             context: 'Context'
                         },
                         {
-                            text: 'Foo13',
+                            text: 'Foo14',
                             context: 'Context'
                         },
                         {
-                            text: 'Foo14',
+                            text: 'Foo15',
                             textPlural: 'Plural'
                         },
                         {
-                            text: 'Foo15'
+                            text: 'Foo16'
                         }
                     ]);
                 });
@@ -3940,19 +4016,21 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t('Foo6', null, {comment: 'Comment'})`);
                     parser.parseString(`t('Foo7', null, null, 'Context')`);
                     parser.parseString(`t('Foo8')`);
-                    // fallback
-                    parser.parseString(`t('Foo9', 'Plural', 'Context')`);
-                    parser.parseString(`t('Foo10', null, 'Context')`);
-                    parser.parseString(`t('Foo11', {comment: 'Comment'}, 'Context')`);
-                    parser.parseString(`t('Foo12', {comment: 'Comment'})`);
+                    // comment string
+                    parser.parseString(`t('Foo9', 'Plural', 'Comment', 'Context')`);
+                    parser.parseString(`t('Foo10', 'Plural', 'Comment')`);
+                    parser.parseString(`t('Foo11', null, 'Comment', 'Context')`);
+                    parser.parseString(`t('Foo12', null, 'Comment'`);
                     // partial
                     parser.parseString(`t('Foo13', 'Plural', {comment: 'Comment'}, other)`);
                     parser.parseString(`t('Foo14', null, {comment: 'Comment'}, other)`);
                     parser.parseString(`t('Foo15', 'Plural', other)`);
                     parser.parseString(`t('Foo16', other)`);
-                    parser.parseString(`t('Foo17', {comment: 'Comment'}, other)`); // fallback
+                    parser.parseString(`t('Foo17', 'Plural', 'Comment', other)`); // comment string
+                    parser.parseString(`t('Foo18', null, 'Comment', other)`); // comment string
                     // invalid
                     parser.parseString(`t( null, 'Plural', {comment: 'Comment'}, 'Context')`);
+                    parser.parseString(`t( null, 'Plural', 'Comment', 'Context')`); // comment string
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
 
@@ -3996,16 +4074,23 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             text: 'Foo9',
-                            textPlural: 'Plural'
+                            textPlural: 'Plural',
+                            comments: ['Comment'],
+                            context: 'Context'
                         },
                         {
-                            text: 'Foo10'
+                            text: 'Foo10',
+                            textPlural: 'Plural',
+                            comments: ['Comment'],
                         },
                         {
-                            text: 'Foo11'
+                            text: 'Foo11',
+                            comments: ['Comment'],
+                            context: 'Context'
                         },
                         {
-                            text: 'Foo12'
+                            text: 'Foo12',
+                            comments: ['Comment'],
                         },
                         {
                             text: 'Foo13',
@@ -4024,7 +4109,13 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             text: 'Foo16'
                         },
                         {
-                            text: 'Foo17'
+                            text: 'Foo17',
+                            textPlural: 'Plural',
+                            comments: ['Comment']
+                        },
+                        {
+                            text: 'Foo18',
+                            comments: ['Comment']
                         }
                     ]);
                 });
@@ -4048,14 +4139,18 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t('Foo6', null, 'Plural')`);
                     parser.parseString(`t('Foo7', null, null, 'Context')`);
                     parser.parseString(`t('Foo8')`);
-                    // fallback
-                    parser.parseString(`t('Foo9', 'Plural', 'Context')`);
+                    // comment string
+                    parser.parseString(`t('Foo9', 'Comment', 'Plural', 'Context')`);
+                    parser.parseString(`t('Foo10', 'Comment', 'Plural')`);
+                    parser.parseString(`t('Foo11', 'Comment', null, 'Context')`);
+                    parser.parseString(`t('Foo12', 'Comment')`);
                     // partial
-                    parser.parseString(`t('Foo10', {comment: 'Comment'}, 'Plural', other)`);
-                    parser.parseString(`t('Foo11', null, 'Plural', other)`);
-                    parser.parseString(`t('Foo12', {comment: 'Comment'}, other)`);
-                    parser.parseString(`t('Foo13', other)`);
-                    parser.parseString(`t('Foo14', 'Plural', other)`); // fallback
+                    parser.parseString(`t('Foo13', {comment: 'Comment'}, 'Plural', other)`);
+                    parser.parseString(`t('Foo14', null, 'Plural', other)`);
+                    parser.parseString(`t('Foo15', {comment: 'Comment'}, other)`);
+                    parser.parseString(`t('Foo16', other)`);
+                    parser.parseString(`t('Foo17', 'Comment', 'Plural', other)`); // comment string
+                    parser.parseString(`t('Foo18', 'Comment', other)`); // comment string
                     // invalid
                     parser.parseString(`t(null, {comment: 'Comment'}, 'Plural', 'Context')`);
                     parser.parseString(`t(other)`);
@@ -4099,26 +4194,49 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             text: 'Foo8'
                         },
                         {
-                            text: 'Foo9'
+                            text: 'Foo9',
+                            comments: ['Comment'],
+                            textPlural: 'Plural',
+                            context: 'Context'
                         },
                         {
                             text: 'Foo10',
                             comments: ['Comment'],
-                            textPlural: 'Plural'
+                            textPlural: 'Plural',
                         },
                         {
                             text: 'Foo11',
-                            textPlural: 'Plural'
+                            comments: ['Comment'],
+                            context: 'Context'
                         },
                         {
                             text: 'Foo12',
+                            comments: ['Comment'],
+                        },
+                        {
+                            text: 'Foo13',
+                            comments: ['Comment'],
+                            textPlural: 'Plural'
+                        },
+                        {
+                            text: 'Foo14',
+                            textPlural: 'Plural'
+                        },
+                        {
+                            text: 'Foo15',
                             comments: ['Comment']
                         },
                         {
-                            text: 'Foo13'
+                            text: 'Foo16'
                         },
                         {
-                            text: 'Foo14'
+                            text: 'Foo17',
+                            comments: ['Comment'],
+                            textPlural: 'Plural'
+                        },
+                        {
+                            text: 'Foo18',
+                            comments: ['Comment']
                         }
                     ]);
                 });
@@ -4142,15 +4260,18 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t( null, 'Foo6', 'Context')`);
                     parser.parseString(`t( null, 'Foo7', null, {comment: 'Comment'})`);
                     parser.parseString(`t( null, 'Foo8')`);
-                    // fallback
-                    parser.parseString(`t('Plural', 'Foo9', {comment: 'Comment'})`);
-                    parser.parseString(`t( null, 'Foo10', {comment: 'Comment'})`);
+                    // comment string
+                    parser.parseString(`t('Plural', 'Foo9', 'Context', 'Comment')`);
+                    parser.parseString(`t('Plural', 'Foo10', null, 'Comment')`);
+                    parser.parseString(`t( null, 'Foo11', 'Context', 'Comment')`);
+                    parser.parseString(`t( null, 'Foo12', null, 'Comment')`);
                     // partial
-                    parser.parseString(`t('Plural', 'Foo11', 'Context', other)`);
-                    parser.parseString(`t( null, 'Foo12', 'Context', other)`);
-                    parser.parseString(`t('Plural', 'Foo13', other)`);
+                    parser.parseString(`t('Plural', 'Foo13', 'Context', other)`);
+                    parser.parseString(`t( null, 'Foo14', 'Context', other)`);
+                    parser.parseString(`t('Plural', 'Foo15', other)`);
                     // invalid
                     parser.parseString(`t('Plural', null, 'Context', {comment: 'Comment'})`);
+                    parser.parseString(`t('Plural', null, 'Context', 'Comment')`); // comment string
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
 
@@ -4193,23 +4314,36 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             textPlural: 'Plural',
-                            text: 'Foo9'
-                        },
-                        {
-                            text: 'Foo10'
+                            text: 'Foo9',
+                            context: 'Context',
+                            comments: ['Comment']
                         },
                         {
                             textPlural: 'Plural',
+                            text: 'Foo10',
+                            comments: ['Comment']
+                        },
+                        {
                             text: 'Foo11',
-                            context: 'Context'
+                            context: 'Context',
+                            comments: ['Comment']
                         },
                         {
                             text: 'Foo12',
+                            comments: ['Comment']
+                        },
+                        {
+                            textPlural: 'Plural',
+                            text: 'Foo13',
+                            context: 'Context'
+                        },
+                        {
+                            text: 'Foo14',
                             context: 'Context'
                         },
                         {
                             textPlural: 'Plural',
-                            text: 'Foo13'
+                            text: 'Foo15'
                         }
                     ]);
                 });
@@ -4233,16 +4367,21 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t( null, 'Foo6', {comment: 'Comment'})`);
                     parser.parseString(`t( null, 'Foo7', null, 'Context')`);
                     parser.parseString(`t( null, 'Foo8')`);
-                    // fallback
-                    parser.parseString(`t('Plural', 'Foo9', 'Context')`);
-                    parser.parseString(`t( null, 'Foo10', 'Context')`);
+                    // comment string
+                    parser.parseString(`t('Plural', 'Foo9', 'Comment', 'Context')`);
+                    parser.parseString(`t('Plural', 'Foo10', 'Comment')`);
+                    parser.parseString(`t( null, 'Foo11', 'Comment', 'Context')`);
+                    parser.parseString(`t( null, 'Foo12', 'Comment')`);
                     // partial
-                    parser.parseString(`t('Plural', 'Foo11', {comment: 'Comment'}, other)`);
-                    parser.parseString(`t(null, 'Foo12', {comment: 'Comment'}, other)`);
-                    parser.parseString(`t('Plural', 'Foo13', other)`);
-                    parser.parseString(`t(null, 'Foo14', other)`);
+                    parser.parseString(`t('Plural', 'Foo13', {comment: 'Comment'}, other)`);
+                    parser.parseString(`t(null, 'Foo14', {comment: 'Comment'}, other)`);
+                    parser.parseString(`t('Plural', 'Foo15', other)`);
+                    parser.parseString(`t(null, 'Foo16', other)`);
+                    parser.parseString(`t('Plural', 'Foo17', 'Comment', other)`); // comment string
+                    parser.parseString(`t(null, 'Foo18', 'Comment', other)`); // comment string
                     // invalid
                     parser.parseString(`t('Plural', null, {comment: 'Comment'}, 'Context')`);
+                    parser.parseString(`t('Plural', null, 'Comment', 'Context')`); // comment string
                     parser.parseString(`t('Plural', other)`);
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
@@ -4287,26 +4426,48 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             textPlural: 'Plural',
-                            text: 'Foo9'
-                        },
-                        {
-                            text: 'Foo10'
+                            text: 'Foo9',
+                            comments: ['Comment'],
+                            context: 'Context'
                         },
                         {
                             textPlural: 'Plural',
+                            text: 'Foo10',
+                            comments: ['Comment'],
+                        },
+                        {
                             text: 'Foo11',
-                            comments: ['Comment']
+                            comments: ['Comment'],
+                            context: 'Context'
                         },
                         {
                             text: 'Foo12',
+                            comments: ['Comment'],
+                        },
+                        {
+                            textPlural: 'Plural',
+                            text: 'Foo13',
+                            comments: ['Comment']
+                        },
+                        {
+                            text: 'Foo14',
                             comments: ['Comment']
                         },
                         {
                             textPlural: 'Plural',
-                            text: 'Foo13'
+                            text: 'Foo15'
                         },
                         {
-                            text: 'Foo14'
+                            text: 'Foo16'
+                        },
+                        {
+                            textPlural: 'Plural',
+                            text: 'Foo17',
+                            comments: ['Comment']
+                        },
+                        {
+                            text: 'Foo18',
+                            comments: ['Comment']
                         }
                     ]);
                 });
@@ -4330,22 +4491,23 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t( null, 'Foo6', 'Plural')`);
                     parser.parseString(`t( null, 'Foo7', null, 'Context')`);
                     parser.parseString(`t( null 'Foo8')`);
-                    parser.parseString(`t({comment: 'Comment'}, null, 'Plural', 'Context')`);
-                    // fallback
-                    parser.parseString(`t('Foo9', 'Plural', 'Context')`);
-                    parser.parseString(`t('Foo10', null, 'Context')`);
-                    parser.parseString(`t('Foo11', 'Plural')`);
-                    parser.parseString(`t('Foo12')`);
+                    // comment string
+                    parser.parseString(`t('Comment', 'Foo9', 'Plural', 'Context')`);
+                    parser.parseString(`t('Comment', 'Foo10', 'Plural')`);
+                    parser.parseString(`t('Comment', 'Foo11', null, 'Context')`);
+                    parser.parseString(`t('Comment', 'Foo12')`);
                     // partial
                     parser.parseString(`t({comment: 'Comment'}, 'Foo13', 'Plural', other)`);
                     parser.parseString(`t(null, 'Foo14', 'Plural', other)`);
                     parser.parseString(`t({comment: 'Comment'}, 'Foo15', other)`);
                     parser.parseString(`t(null, 'Foo16', other)`);
-                    parser.parseString(`t('Foo17', 'Plural', other)`); // fallback
-                    parser.parseString(`t('Foo18', other)`); // fallback
+                    parser.parseString(`t('Comment', 'Foo17', 'Plural', other)`); // comment string
+                    parser.parseString(`t('Comment', 'Foo18', other)`); // comment string
                     // invalid
                     parser.parseString(`t({comment: 'Comment'}, null, 'Plural', 'Context')`);
                     parser.parseString(`t({comment: 'Comment'}, other)`);
+                    parser.parseString(`t('Comment', null, 'Plural', 'Context')`); // comment string
+                    parser.parseString(`t('Comment', other)`); // comment string
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
 
@@ -4388,6 +4550,26 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             comments: ['Comment'],
+                            text: 'Foo9',
+                            textPlural: 'Plural',
+                            context: 'Context'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo10',
+                            textPlural: 'Plural',
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo11',
+                            context: 'Context'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo12',
+                        },
+                        {
+                            comments: ['Comment'],
                             text: 'Foo13',
                             textPlural: 'Plural'
                         },
@@ -4401,6 +4583,15 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             text: 'Foo16'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo17',
+                            textPlural: 'Plural'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo18',
                         }
                     ]);
                 });
@@ -4424,23 +4615,23 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t( null, {comment: 'Comment'}, 'Foo6')`);
                     parser.parseString(`t( null, null, 'Foo7', 'Context')`);
                     parser.parseString(`t( null, null, 'Foo8')`);
-                    // fallback
-                    parser.parseString(`t('Plural', 'Foo9', 'Context')`);
-                    parser.parseString(`t('Plural', 'Foo10')`);
-                    parser.parseString(`t( null, 'Foo11', 'Context')`);
-                    parser.parseString(`t( null, 'Foo12')`);
-                    parser.parseString(`t({comment: 'Comment'}, 'Foo13', 'Context')`);
-                    parser.parseString(`t({comment: 'Comment'}, 'Foo14')`);
+                    // comment string
+                    parser.parseString(`t('Plural', 'Comment', 'Foo9', 'Context')`);
+                    parser.parseString(`t('Plural', 'Comment', 'Foo10')`);
+                    parser.parseString(`t( null, 'Comment', 'Foo11', 'Context')`);
+                    parser.parseString(`t( null, 'Comment', 'Foo12')`);
                     // partial
-                    parser.parseString(`t('Plural', {comment: 'Comment'}, 'Foo15', other)`);
-                    parser.parseString(`t('Plural', null, 'Foo16', other)`);
-                    parser.parseString(`t(null, {comment: 'Comment'}, 'Foo17', other)`);
-                    parser.parseString(`t(null, null, 'Foo18', other)`);
-                    parser.parseString(`t('Plural', 'Foo19', other)`); // fallback
-                    parser.parseString(`t({comment: 'Comment'}, 'Foo20', other)`); // fallback
+                    parser.parseString(`t('Plural', {comment: 'Comment'}, 'Foo13', other)`);
+                    parser.parseString(`t('Plural', null, 'Foo14', other)`);
+                    parser.parseString(`t(null, {comment: 'Comment'}, 'Foo15', other)`);
+                    parser.parseString(`t(null, null, 'Foo16', other)`);
+                    parser.parseString(`t('Plural', 'Comment', 'Foo17', other)`); // comment string
+                    parser.parseString(`t(null, 'Comment', 'Foo18', other)`); // comment string
                     // invalid
                     parser.parseString(`t('Plural', {comment: 'Comment'}, null, 'Context')`);
                     parser.parseString(`t('Plural', {comment: 'Comment'}, other)`);
+                    parser.parseString(`t('Plural', 'Comment', null, 'Context')`); // comment string
+                    parser.parseString(`t('Plural', 'Comment', other)`); // comment string
                     parser.parseString(`t('Plural', other)`);
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
@@ -4485,18 +4676,47 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         {
                             textPlural: 'Plural',
                             comments: ['Comment'],
-                            text: 'Foo15'
+                            text: 'Foo9',
+                            context: 'Context'
                         },
                         {
                             textPlural: 'Plural',
-                            text: 'Foo16'
+                            comments: ['Comment'],
+                            text: 'Foo10',
                         },
                         {
                             comments: ['Comment'],
-                            text: 'Foo17'
+                            text: 'Foo11',
+                            context: 'Context'
                         },
                         {
-                            text: 'Foo18'
+                            comments: ['Comment'],
+                            text: 'Foo12',
+                        },
+                        {
+                            textPlural: 'Plural',
+                            comments: ['Comment'],
+                            text: 'Foo13'
+                        },
+                        {
+                            textPlural: 'Plural',
+                            text: 'Foo14'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo15'
+                        },
+                        {
+                            text: 'Foo16'
+                        },
+                        {
+                            textPlural: 'Plural',
+                            comments: ['Comment'],
+                            text: 'Foo17',
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo18',
                         }
                     ]);
                 });
@@ -4520,19 +4740,25 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t( null, 'Plural', 'Foo6')`);
                     parser.parseString(`t( null, null, 'Foo7', 'Context')`);
                     parser.parseString(`t( null, null, 'Foo8')`);
-                    // fallback
-                    parser.parseString(`t('Plural', 'Foo9', 'Context')`);
-                    parser.parseString(`t('Plural', 'Foo10')`);
+                    // comment string
+                    parser.parseString(`t('Comment', 'Plural', 'Foo9', 'Context')`);
+                    parser.parseString(`t('Comment', 'Plural', 'Foo10')`);
+                    parser.parseString(`t('Comment', null, 'Foo11', 'Context')`);
+                    parser.parseString(`t('Comment', null, 'Foo12')`);
                     // partial
-                    parser.parseString(`t({comment: 'Comment'}, 'Plural', 'Foo11', other)`);
-                    parser.parseString(`t({comment: 'Comment'}, null, 'Foo12', other)`);
-                    parser.parseString(`t(null, 'Plural', 'Foo13', other)`);
-                    parser.parseString(`t(null, null, 'Foo14', other)`);
-                    parser.parseString(`t('Plural', 'Foo15', other)`); // fallback
+                    parser.parseString(`t({comment: 'Comment'}, 'Plural', 'Foo13', other)`);
+                    parser.parseString(`t({comment: 'Comment'}, null, 'Foo14', other)`);
+                    parser.parseString(`t(null, 'Plural', 'Foo15', other)`);
+                    parser.parseString(`t(null, null, 'Foo16', other)`);
+                    parser.parseString(`t('Comment', 'Plural', 'Foo17', other)`); // comment string
+                    parser.parseString(`t('Comment', null, 'Foo18', other)`); // comment string
                     // invalid
                     parser.parseString(`t({comment: 'Comment'}, 'Plural', null, 'Context')`);
                     parser.parseString(`t({comment: 'Comment'}, 'Plural', other)`);
                     parser.parseString(`t({comment: 'Comment'}, other)`);
+                    parser.parseString(`t('Comment', 'Plural', null, 'Context')`); // comment string
+                    parser.parseString(`t('Comment', 'Plural', other)`); // comment string
+                    parser.parseString(`t('Comment', other)`); // comment string
                     parser.parseString(`t(null, 'Plural', other)`);
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
@@ -4578,18 +4804,47 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         {
                             comments: ['Comment'],
                             textPlural: 'Plural',
-                            text: 'Foo11'
+                            text: 'Foo9',
+                            context: 'Context'
                         },
                         {
                             comments: ['Comment'],
-                            text: 'Foo12'
+                            textPlural: 'Plural',
+                            text: 'Foo10',
                         },
                         {
+                            comments: ['Comment'],
+                            text: 'Foo11',
+                            context: 'Context'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo12',
+                        },
+                        {
+                            comments: ['Comment'],
                             textPlural: 'Plural',
                             text: 'Foo13'
                         },
                         {
+                            comments: ['Comment'],
                             text: 'Foo14'
+                        },
+                        {
+                            textPlural: 'Plural',
+                            text: 'Foo15'
+                        },
+                        {
+                            text: 'Foo16'
+                        },
+                        {
+                            comments: ['Comment'],
+                            textPlural: 'Plural',
+                            text: 'Foo17'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo18'
                         }
                     ]);
                 });
@@ -4613,17 +4868,16 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t( null, 'Context', null, 'Foo6')`);
                     parser.parseString(`t( null, null, {comment: 'Comment'}, 'Foo7')`);
                     parser.parseString(`t( null, null, null, 'Foo8')`);
-                    // fallback
-                    parser.parseString(`t('Plural', 'Context', 'Foo9')`);
-                    parser.parseString(`t('Plural', null, 'Foo10')`);
-                    parser.parseString(`t( null, 'Context', 'Foo11')`);
-                    parser.parseString(`t( null, null, 'Foo12')`);
-                    parser.parseString(`t('Plural', {comment: 'Comment'}, 'Foo13')`);
-                    parser.parseString(`t({comment: 'Comment'}, 'Foo14')`);
-                    parser.parseString(`t( null, {comment: 'Comment'}, 'Foo15')`);
+                    // comment string
+                    parser.parseString(`t('Plural', 'Context', 'Comment', 'Foo9')`);
+                    parser.parseString(`t('Plural', null, 'Comment', 'Foo10')`);
+                    parser.parseString(`t( null, 'Context', 'Comment', 'Foo11')`);
+                    parser.parseString(`t( null, null, 'Comment', 'Foo12')`);
                     // invalid
                     parser.parseString(`t('Plural', 'Context', {comment: 'Comment'}, other)`);
                     parser.parseString(`t('Plural', 'Context', {comment: 'Comment'})`);
+                    parser.parseString(`t('Plural', 'Context', 'Comment', other)`); // comment string
+                    parser.parseString(`t('Plural', 'Context', 'Comment')`); // comment string
                     parser.parseString(`t('Plural', 'Context', other)`);
                     parser.parseString(`t('Plural', other)`);
                     parser.parseString(`t(other)`);
@@ -4665,6 +4919,26 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             text: 'Foo8'
+                        },
+                        {
+                            textPlural: 'Plural',
+                            context: 'Context',
+                            comments: ['Comment'],
+                            text: 'Foo9'
+                        },
+                        {
+                            textPlural: 'Plural',
+                            comments: ['Comment'],
+                            text: 'Foo10'
+                        },
+                        {
+                            context: 'Context',
+                            comments: ['Comment'],
+                            text: 'Foo11'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo12'
                         }
                     ]);
                 });
@@ -4688,16 +4962,18 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t( null, {comment: 'Comment'}, null, 'Foo6')`);
                     parser.parseString(`t( null, null, 'Context', 'Foo7')`);
                     parser.parseString(`t( null, null, null, 'Foo8')`);
-                    // fallback
-                    parser.parseString(`t('Plural', 'Context', 'Foo9')`);
-                    parser.parseString(`t( null, 'Context', 'Foo10')`);
-                    parser.parseString(`t( null, null, 'Foo11')`);
-                    parser.parseString(`t({comment: 'Comment'}, 'Context', 'Foo11')`);
-                    parser.parseString(`t({comment: 'Comment'}, null, 'Foo12')`);
+                    // comment string
+                    parser.parseString(`t('Plural', 'Comment', 'Context', 'Foo9')`);
+                    parser.parseString(`t('Plural', 'Comment', null, 'Foo10')`);
+                    parser.parseString(`t( null, 'Comment', 'Context', 'Foo11')`);
+                    parser.parseString(`t( null, 'Comment', null, 'Foo12')`);
                     // invalid
                     parser.parseString(`t('Plural', {comment: 'Comment'}, 'Context', other)`);
                     parser.parseString(`t('Plural', {comment: 'Comment'}, 'Context')`);
                     parser.parseString(`t('Plural', {comment: 'Comment'}, other)`);
+                    parser.parseString(`t('Plural', 'Comment', 'Context', other)`); // comment string
+                    parser.parseString(`t('Plural', 'Comment', 'Context')`); // comment string
+                    parser.parseString(`t('Plural', 'Comment', other)`); // comment string
                     parser.parseString(`t('Plural', other)`);
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
@@ -4738,6 +5014,26 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             text: 'Foo8'
+                        },
+                        {
+                            textPlural: 'Plural',
+                            comments: ['Comment'],
+                            context: 'Context',
+                            text: 'Foo9'
+                        },
+                        {
+                            textPlural: 'Plural',
+                            comments: ['Comment'],
+                            text: 'Foo10'
+                        },
+                        {
+                            comments: ['Comment'],
+                            context: 'Context',
+                            text: 'Foo11'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo12'
                         }
                     ]);
                 });
@@ -4762,13 +5058,19 @@ describe('JS: Call Expression Extractor with comment function', () => {
                     parser.parseString(`t( null, null, 'Context', 'Foo7')`);
                     parser.parseString(`t( null, null, null, 'Foo8')`);
                     // fallback
-                    parser.parseString(`t('Plural', 'Context', 'Foo9')`);
-                    parser.parseString(`t('Plural', null, 'Foo10')`);
+                    parser.parseString(`t('Comment', 'Plural', 'Context', 'Foo9')`);
+                    parser.parseString(`t('Comment', 'Plural', null, 'Foo10')`);
+                    parser.parseString(`t('Comment', null, 'Context', 'Foo11')`);
+                    parser.parseString(`t('Comment', null, null, 'Foo12')`);
                     // invalid
                     parser.parseString(`t({comment: 'Comment'}, 'Plural', 'Context', other)`);
                     parser.parseString(`t({comment: 'Comment'}, 'Plural', 'Context')`);
                     parser.parseString(`t({comment: 'Comment'}, 'Plural', other)`);
                     parser.parseString(`t({comment: 'Comment'}, other)`);
+                    parser.parseString(`t('Comment', 'Plural', 'Context', other)`); // comment string
+                    parser.parseString(`t('Comment', 'Plural', 'Context')`); // comment string
+                    parser.parseString(`t('Comment', 'Plural', other)`); // comment string
+                    parser.parseString(`t('Comment', other)`); // comment string
                     parser.parseString(`t(other)`);
                     parser.parseString(`t()`);
 
@@ -4808,7 +5110,27 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         },
                         {
                             text: 'Foo8'
-                        }
+                        },
+                        {
+                            comments: ['Comment'],
+                            textPlural: 'Plural',
+                            context: 'Context',
+                            text: 'Foo9'
+                        },
+                        {
+                            comments: ['Comment'],
+                            textPlural: 'Plural',
+                            text: 'Foo10'
+                        },
+                        {
+                            comments: ['Comment'],
+                            context: 'Context',
+                            text: 'Foo11'
+                        },
+                        {
+                            comments: ['Comment'],
+                            text: 'Foo12'
+                        },
                     ]);
                 });
             });

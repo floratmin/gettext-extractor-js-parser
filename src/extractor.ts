@@ -28,8 +28,16 @@ interface IArgumentExpressions {
     text: ts.LiteralExpression | undefined;
     textPlural: ts.LiteralExpression | undefined;
     context: ts.LiteralExpression | undefined ;
+    comments: ts.ObjectLiteralExpression | undefined;
 }
-type Indices = ['text' | 'textPlural' | 'comments' | 'context' | undefined, number][];
+
+type IndicesArgs = 'text' | 'textPlural' | 'comments' | 'context' | undefined;
+
+type Indices = [IndicesArgs, number][];
+
+type TypeFunctionArray = (typeof isTextLiteral | ((expression: ts.Expression) => boolean) | typeof isNullOrTextLiteral)[];
+
+type ArgTypes = ('c' | 't' | 'o')[];
 
 type CommentsObject = {
    comment: string[];
@@ -40,7 +48,6 @@ type CommentsObject = {
 
 export function callExpressionExtractor(calleeName: string | string[], options: ICustomJsExtractorOptions): IJsExtractorFunction {
     Validate.required.argument({calleeName});
-
     let calleeNames = ([] as string[]).concat(calleeName);
 
     for (let name of calleeNames) {
@@ -52,7 +59,6 @@ export function callExpressionExtractor(calleeName: string | string[], options: 
     validateCustomOptions(options);
     validateContentOptions(options);
     Validate.optional.numberProperty(options, 'options.arguments.comments');
-
     let contentOptions: IContentOptions = {
         trimWhiteSpace: false,
         preserveIndentation: true,
@@ -72,11 +78,12 @@ export function callExpressionExtractor(calleeName: string | string[], options: 
     }
 
     let commentOptions: ICustomCommentOptions;
+
     if (options.comments) {
         commentOptions = {
             commentString: 'comment',
             throwWhenMalformed: true,
-            fallback: true
+            fallback: false
         };
         if (options.comments.commentString !== undefined) {
             commentOptions.commentString = options.comments.commentString;
@@ -103,7 +110,6 @@ export function callExpressionExtractor(calleeName: string | string[], options: 
             if (matches) {
                 let message = extractArguments(callExpression, options.arguments, contentOptions, commentOptions);
                 if (message) {
-                    // message.comments = JsCommentUtils.extractComments(callExpression, sourceFile, options.comments);
                     addMessage(message);
                 }
             }
@@ -118,6 +124,7 @@ function validateCustomOptions(options: ICustomJsExtractorOptions): void {
     Validate.optional.numberProperty(options, 'options.arguments.comments');
     Validate.optional.booleanProperty(options, 'options.comments.throwWhenMalformed');
     Validate.optional.stringProperty(options, 'options.comments.commentString');
+
     if (options.comments && options.comments.props) {
         Object.entries(options.comments.props).forEach(([key, value]) => {
            if (!(Array.isArray(value) && typeof value[0] === 'string' && typeof value[1] === 'string')) {
@@ -127,6 +134,87 @@ function validateCustomOptions(options: ICustomJsExtractorOptions): void {
     }
 }
 
+function getFallback(parent: ArgTypes): ArgTypes | undefined {
+    if (parent.length > 1) {
+        if (parent[0] === 'c') {
+            return parent.slice(1);
+        } else if (parent.length > 1 && parent[0] === 'o' && ['c', 'o'].includes(parent[1])) {
+            return parent.slice(1);
+        }
+    }
+    return undefined;
+}
+
+function getArgumentExpressionsArray(
+    typeFunctionArray: TypeFunctionArray,
+    argumentArray: ts.Expression[],
+    args: IndicesArgs[],
+    argTypes: ArgTypes,
+    fallback: boolean
+): IArgumentExpressions {
+    let argumentExpressions: IArgumentExpressions = {text: undefined, textPlural: undefined, context: undefined, comments: undefined};
+
+    for (let i = 0; i < argTypes.length; i++) {
+        if (typeFunctionArray[i](argumentArray[i])) {
+            if (!isNullOrUndefined(argumentArray[i])) {
+                // @ts-ignore
+                argumentExpressions[args[i]] = argumentArray[i];
+            }
+        } else if (fallback) {
+            const fallbackArgTypes = getFallback(argTypes.slice(i));
+            if (fallbackArgTypes) {
+                argumentExpressions = {...argumentExpressions, ...Object.fromEntries(Object.entries(
+                    getArgumentExpressionsArray(
+                        typeFunctionArray.slice(i + 1),
+                        argumentArray.slice(i),
+                        args.slice(i + 1),
+                        fallbackArgTypes,
+                        fallback
+                    )
+                    ).filter(([_, value]) => value))};
+                return argumentExpressions;
+            }
+            break;
+        } else {
+            break;
+        }
+    }
+
+    return argumentExpressions;
+}
+
+function getArgumentExpressions(
+    callArguments: ts.NodeArray<ts.Expression>,
+    argumentMapping: ICustomArgumentIndexMapping,
+    commentOptions: ICustomCommentOptions | undefined
+): IArgumentExpressions {
+    const indices = <Indices>Object.entries(argumentMapping).sort((a, b) => a[1] - b[1]);
+    const args = indices.map(([arg, _]) => arg);
+    const argTypes = args.map(arg => arg === 'text' ? 't' : arg === 'comments' ? 'c' : 'o');
+    const positions = indices.map(([_, position]) => position);
+    const argumentArray:  ts.Expression[] = [];
+    const typeFunctionArray: TypeFunctionArray = [];
+    const fallback = commentOptions !== undefined && commentOptions.fallback === true;
+
+    const isNullOrObjectLiteralOrLiteralExpression = commentOptions
+        ? fallback
+            ? isNullOrObjectLiteralExpression
+            : isNullOrObjectLiteralOrTextLiteral
+        : isNullOrTextLiteral;
+    positions.forEach(position => {
+        argumentArray.push(checkAndConcatenateStrings(callArguments[position]));
+        typeFunctionArray.push(
+            argumentMapping.comments === position
+                ?  isNullOrObjectLiteralOrLiteralExpression
+                : argumentMapping.text === position
+                    ? isTextLiteral
+                    : isNullOrTextLiteral
+        );
+    });
+
+    return getArgumentExpressionsArray(typeFunctionArray, argumentArray, args, argTypes, fallback);
+}
+
 function extractArguments(
     callExpression: ts.CallExpression,
     argumentMapping: ICustomArgumentIndexMapping,
@@ -134,284 +222,9 @@ function extractArguments(
     commentOptions: ICustomCommentOptions | undefined
 ): IMessageData | null {
     let callArguments = callExpression.arguments;
-    let indices = <Indices>Object.entries(argumentMapping).sort((a, b) => a[1] - b[1]);
-    const textPluralOptional = typeof argumentMapping.textPlural === 'number'
-        && argumentMapping.textPlural > argumentMapping.text
-        || typeof  argumentMapping.textPlural !== 'number';
-    const contextOptional =  typeof argumentMapping.context === 'number'
-        && argumentMapping.context > argumentMapping.text
-        || typeof argumentMapping.context !== 'number';
-    const argumentExpressions: IArgumentExpressions = {text: undefined, textPlural: undefined, context: undefined};
-    let commentsExpression: ts.ObjectLiteralExpression | ts.LiteralExpression | undefined;
-    let commentMappingIndex = typeof argumentMapping.comments === 'number'
-        ? indices.findIndex(([_, i]) => i === argumentMapping.comments)
-        : NaN;
-    indices.push([undefined, NaN], [undefined, NaN], [undefined, NaN]);
-    let firstArgument: ts.Expression | undefined = callArguments[indices[0][1]];
-    let secondArgument: ts.Expression | undefined = callArguments[indices[1][1]];
-    let thirdArgument: ts.Expression | undefined = callArguments[indices[2][1]];
-    let fourthArgument: ts.Expression | undefined = callArguments[indices[3][1]];
-    // this array has more, but we are only interested in these types
-    const args = <('text'| 'textPlural' | 'context')[]>indices.map(([arg, _]) => arg);
-    firstArgument = checkAndConcatenateStrings(firstArgument);
-    secondArgument = checkAndConcatenateStrings(secondArgument);
-    thirdArgument = checkAndConcatenateStrings(thirdArgument);
-    fourthArgument = checkAndConcatenateStrings(fourthArgument);
-    const isObjectLiteralOrLiteralExpression = commentOptions ? isObjectLiteralExpression : isTextLiteral;
-    const fallback = commentOptions?.fallback;
-    if (typeof argumentMapping.textPlural !== 'number' && typeof argumentMapping.context !== 'number') {
-        if (
-            commentMappingIndex === 0
-            && (isObjectLiteralOrLiteralExpression(firstArgument) || isNullOrUndefined(firstArgument))
-            && isTextLiteral(secondArgument)
-        ) {
-            if (isObjectLiteralOrLiteralExpression(firstArgument)) {commentsExpression = firstArgument; }
-            argumentExpressions[args[1]] = secondArgument;
-        } else if (fallback && commentMappingIndex === 0 && isTextLiteral(firstArgument)) {
-            argumentExpressions[args[1]] = firstArgument;
-        } else if ([1, NaN].includes(commentMappingIndex) && isTextLiteral(firstArgument)) {
-            argumentExpressions[args[0]]  = firstArgument;
-            if (!isNaN(commentMappingIndex) && isObjectLiteralOrLiteralExpression(secondArgument)) {
-                commentsExpression = secondArgument;
-            }
-        }
-    } else if (textPluralOptional && contextOptional) {
-        if (commentMappingIndex === 0) {
-            if (isObjectLiteralOrLiteralExpression(firstArgument) || isNullOrUndefined(firstArgument)) {
-                if (isObjectLiteralOrLiteralExpression(firstArgument)) {commentsExpression = firstArgument; }
-                if (isTextLiteral(secondArgument)) {
-                    argumentExpressions[args[1]] = secondArgument;
-                    if (isTextLiteral(thirdArgument)) {
-                        argumentExpressions[args[2]] = thirdArgument;
-                        if (isTextLiteral(fourthArgument)) {
-                            argumentExpressions[args[3]] = fourthArgument;
-                        }
-                    } else if (isNullOrUndefined(thirdArgument) && isTextLiteral(fourthArgument)) {
-                        argumentExpressions[args[3]] = fourthArgument;
-                    }
-                }
-            } else if (fallback && isTextLiteral(firstArgument)) {
-                argumentExpressions[args[1]] = firstArgument;
-                if (isTextLiteral(secondArgument) || isNullOrUndefined(secondArgument)) {
-                    if (isTextLiteral(secondArgument)) {argumentExpressions[args[2]] = secondArgument; }
-                    if (isTextLiteral(thirdArgument)) {
-                        argumentExpressions[args[3]] = thirdArgument;
-                    }
-                }
-            }
-        } else if (commentMappingIndex === 1) {
-           if (isTextLiteral(firstArgument)) {
-              argumentExpressions[args[0]] = firstArgument;
-              if (isObjectLiteralOrLiteralExpression(secondArgument) || isNullOrUndefined(secondArgument)) {
-                  if (isObjectLiteralOrLiteralExpression(secondArgument)) {commentsExpression = secondArgument; }
-                  if (isTextLiteral(thirdArgument) || isNullOrUndefined(thirdArgument)) {
-                     if (isTextLiteral(thirdArgument)) {argumentExpressions[args[2]] = thirdArgument; }
-                     if (isTextLiteral(fourthArgument)) {
-                         argumentExpressions[args[3]] = fourthArgument;
-                     }
-                  }
-              } else if (fallback && isTextLiteral(secondArgument)) {
-                  argumentExpressions[args[2]] = secondArgument;
-                  if (isTextLiteral(thirdArgument)) {
-                      argumentExpressions[args[3]] = thirdArgument;
-                  }
-              }
-           }
-        } else if (commentMappingIndex === 2) {
-            if (isTextLiteral(firstArgument)) {
-               argumentExpressions[args[0]] = firstArgument;
-               if (isTextLiteral(secondArgument) || isNullOrUndefined(secondArgument)) {
-                  if (isTextLiteral(secondArgument)) {argumentExpressions[args[1]] = secondArgument; }
-                  if (isObjectLiteralOrLiteralExpression(thirdArgument) || isNullOrUndefined(thirdArgument)) {
-                      if (isObjectLiteralOrLiteralExpression(thirdArgument)) {commentsExpression = thirdArgument; }
-                      if (isTextLiteral(fourthArgument)) {
-                          argumentExpressions[args[3]] = fourthArgument;
-                      }
-                  } else if (fallback && isTextLiteral(thirdArgument)) {
-                      argumentExpressions[args[3]] = thirdArgument;
-                  }
-               } else if (fallback && isObjectLiteralExpression(secondArgument)) {
-                   commentsExpression = secondArgument;
-                   if (isTextLiteral(thirdArgument)) {
-                      argumentExpressions[args[3]] = thirdArgument;
-                   }
-               }
-            }
-        } else if (commentMappingIndex === 3 || isNaN(commentMappingIndex)) {
-            if (isTextLiteral(firstArgument)) {
-               argumentExpressions[args[0]] = firstArgument;
-               if (isTextLiteral(secondArgument) || isNullOrUndefined(secondArgument)) {
-                  if (isTextLiteral(secondArgument)) {argumentExpressions[args[1]]  = secondArgument; }
-                  if (isTextLiteral(thirdArgument) || isNullOrUndefined(thirdArgument)) {
-                      if (isTextLiteral(thirdArgument)) {argumentExpressions[args[2]]  = thirdArgument; }
-                      if (!isNaN(commentMappingIndex) && (isObjectLiteralOrLiteralExpression(fourthArgument))) {
-                          commentsExpression = fourthArgument;
-                      }
-                  } else if (fallback && !isNaN(commentMappingIndex) && isObjectLiteralExpression(thirdArgument)) {
-                      commentsExpression = thirdArgument;
-                  }
-               } else if (fallback && !isNaN(commentMappingIndex) && isObjectLiteralExpression(secondArgument)) {
-                   commentsExpression = secondArgument;
-               }
-            }
-        }
-    } else if (contextOptional || textPluralOptional) {
-        if (commentMappingIndex === 0) {
-            if (
-                (isObjectLiteralOrLiteralExpression(firstArgument) || isNullOrUndefined(firstArgument))
-                && (isTextLiteral(secondArgument) || isNullOrUndefined(secondArgument))
-                && isTextLiteral(thirdArgument)
-            ) {
-                if (isObjectLiteralOrLiteralExpression(firstArgument)) {commentsExpression = firstArgument; }
-                if (isTextLiteral(secondArgument)) {argumentExpressions[args[1]] = secondArgument; }
-                argumentExpressions[args[2]] = thirdArgument;
-                if (isTextLiteral(fourthArgument)) {
-                    argumentExpressions[args[3]] = fourthArgument;
-                }
-            } else if (fallback && isTextLiteral(firstArgument) && isTextLiteral(secondArgument )) {
-                argumentExpressions[args[1]] = firstArgument;
-                argumentExpressions[args[2]] = secondArgument;
-                if (isTextLiteral(thirdArgument)) {
-                    argumentExpressions[args[3]] = thirdArgument;
-                }
-            }
-        } else if (commentMappingIndex === 1) {
-            if (isTextLiteral(firstArgument) || isNullOrUndefined(firstArgument)) {
-                if (isTextLiteral(firstArgument)) {argumentExpressions[args[0]] = firstArgument; }
-                if ((isObjectLiteralOrLiteralExpression(secondArgument) || isNullOrUndefined(secondArgument)) && isTextLiteral(thirdArgument)) {
-                    if (isObjectLiteralOrLiteralExpression(secondArgument)) {commentsExpression = secondArgument; }
-                    argumentExpressions[args[2]] = thirdArgument;
-                    if (isTextLiteral(fourthArgument)) {
-                        argumentExpressions[args[3]] = fourthArgument;
-                    }
-                } else if (fallback && isTextLiteral(secondArgument)) {
-                    argumentExpressions[args[2]] = secondArgument;
-                    if (isTextLiteral(thirdArgument)) {
-                        argumentExpressions[args[3]] = thirdArgument;
-                    }
-                }
-            } else if (fallback && isObjectLiteralExpression(firstArgument) && isTextLiteral(secondArgument)) {
-                commentsExpression = firstArgument;
-                argumentExpressions[args[2]] = secondArgument;
-                if (isTextLiteral(thirdArgument)) {argumentExpressions[args[3]] = thirdArgument; }
-            }
-        } else if (commentMappingIndex === 2) {
-            if ((isTextLiteral(firstArgument) || isNullOrUndefined(firstArgument)) && isTextLiteral(secondArgument)) {
-                if (isTextLiteral(firstArgument)) {argumentExpressions[args[0]] = firstArgument; }
-                argumentExpressions[args[1]] = secondArgument;
-                if (isObjectLiteralOrLiteralExpression(thirdArgument) || isNullOrUndefined(thirdArgument)) {
-                    if (isObjectLiteralOrLiteralExpression(thirdArgument)) {commentsExpression = thirdArgument; }
-                    if (isTextLiteral(fourthArgument)) {
-                        argumentExpressions[args[3]] = fourthArgument;
-                    }
-                } else if (fallback && isTextLiteral(thirdArgument)) {
-                    argumentExpressions[args[3]] = thirdArgument;
-                }
-            }
-        } else if (commentMappingIndex === 3 || isNaN(commentMappingIndex)) {
-            if ((isTextLiteral(firstArgument) || isNullOrUndefined(firstArgument)) && isTextLiteral(secondArgument)) {
-                if (isTextLiteral(firstArgument)) {argumentExpressions[args[0]] = firstArgument; }
-                argumentExpressions[args[1]] = secondArgument;
-                if (isTextLiteral(thirdArgument) || isNullOrUndefined(thirdArgument)) {
-                    if (isTextLiteral(thirdArgument)) {argumentExpressions[args[2]] = thirdArgument; }
-                    if (!isNaN(commentMappingIndex) && isObjectLiteralOrLiteralExpression(fourthArgument)) {
-                        commentsExpression = fourthArgument;
-                    }
-                } else if (fallback && !isNaN(commentMappingIndex) && isObjectLiteralExpression(thirdArgument)) {
-                    commentsExpression = thirdArgument;
-                }
-            }
-        }
-    } else {
-        if (
-            commentMappingIndex === 0
-            && (isObjectLiteralOrLiteralExpression(firstArgument) || isNullOrUndefined(firstArgument))
-            && (isTextLiteral(secondArgument) || isNullOrUndefined(secondArgument))
-            && (isTextLiteral(thirdArgument) || isNullOrUndefined(thirdArgument))
-            && isTextLiteral(fourthArgument)
-        ) {
-            if (isObjectLiteralOrLiteralExpression(firstArgument)) {commentsExpression = firstArgument; }
-            if (isTextLiteral(secondArgument)) {argumentExpressions[args[1]] = secondArgument; }
-            if (isTextLiteral(thirdArgument)) {argumentExpressions[args[2]] = thirdArgument; }
-            argumentExpressions[args[3]] = fourthArgument;
-        } else if (
-            fallback
-            && commentMappingIndex === 0
-            && isTextLiteral(firstArgument)
-            && (isTextLiteral(secondArgument) || isNullOrUndefined(secondArgument))
-            && isTextLiteral(thirdArgument)
-        ) {
-            argumentExpressions[args[1]] = firstArgument;
-            if (isTextLiteral(secondArgument)) {argumentExpressions[args[2]] = secondArgument; }
-            argumentExpressions[args[3]] = thirdArgument;
-        } else if (
-            commentMappingIndex === 1
-            && (isTextLiteral(firstArgument) || isNullOrUndefined(firstArgument))
-            && (isObjectLiteralOrLiteralExpression(secondArgument) || isNullOrUndefined(secondArgument))
-            && (isTextLiteral(thirdArgument) || isNullOrUndefined(thirdArgument))
-            && isTextLiteral(fourthArgument)
-        ) {
-            if (isTextLiteral(firstArgument)) {argumentExpressions[args[0]] = firstArgument; }
-            if (isObjectLiteralOrLiteralExpression(secondArgument)) {commentsExpression = secondArgument; }
-            if (isTextLiteral(thirdArgument)) {argumentExpressions[args[2]] = thirdArgument; }
-            argumentExpressions[args[3]] = fourthArgument;
-        } else if (
-            fallback
-            && commentMappingIndex === 1
-            && (isTextLiteral(firstArgument) || isNullOrUndefined(firstArgument))
-            && isTextLiteral(secondArgument)
-            && isTextLiteral(thirdArgument)
-        ) {
-            if (isTextLiteral(firstArgument)) {argumentExpressions[args[0]] = firstArgument; }
-            argumentExpressions[args[2]] = secondArgument;
-            argumentExpressions[args[3]] = thirdArgument;
-        } else if (
-            fallback
-            && commentMappingIndex === 1
-            && isObjectLiteralExpression(firstArgument)
-            && (isTextLiteral(secondArgument) || isNullOrUndefined(secondArgument))
-            && isTextLiteral(thirdArgument)
-        ) {
-            commentsExpression = firstArgument;
-            if (isTextLiteral(secondArgument)) {argumentExpressions[args[2]] = secondArgument; }
-            argumentExpressions[args[3]] = thirdArgument;
-        } else if (
-            [2, 3, NaN].includes(commentMappingIndex)
-            && (isTextLiteral(firstArgument) || isNullOrUndefined(firstArgument))
-            && (isTextLiteral(secondArgument) || isNullOrUndefined(secondArgument))
-        ) {
-            if (isTextLiteral(firstArgument)) {argumentExpressions[args[0]]  = firstArgument; }
-            if (isTextLiteral(secondArgument)) {argumentExpressions[args[1]]  = secondArgument; }
-            if (
-                commentMappingIndex === 2
-                && (isObjectLiteralOrLiteralExpression(thirdArgument) || isNullOrUndefined(thirdArgument))
-                && isTextLiteral(fourthArgument)
-            ) {
-                if (isObjectLiteralOrLiteralExpression(thirdArgument)) {commentsExpression = thirdArgument; }
-                argumentExpressions[args[3]] = fourthArgument;
-            } else if (fallback && commentMappingIndex === 2 && isTextLiteral(thirdArgument)) {
-                argumentExpressions[args[3]] = thirdArgument;
-            } else if ([3, NaN].includes(commentMappingIndex) && isTextLiteral(thirdArgument)) {
-                argumentExpressions[args[2]]  = thirdArgument;
-                if (!isNaN(commentMappingIndex) && isObjectLiteralOrLiteralExpression(fourthArgument)) {
-                    commentsExpression = fourthArgument;
-                }
-            }
-        } else if (
-            fallback
-            && commentMappingIndex === 2
-            && (isTextLiteral(firstArgument) || isNullOrUndefined(firstArgument))
-            && isObjectLiteralOrLiteralExpression(secondArgument)
-            && isTextLiteral(thirdArgument)
-        ) {
-            if (isTextLiteral(firstArgument)) {argumentExpressions[args[0]] = firstArgument; }
-            commentsExpression = secondArgument;
-            argumentExpressions[args[3]] = thirdArgument;
-        } else if (fallback && commentMappingIndex === 2 && isObjectLiteralOrLiteralExpression(firstArgument) && isTextLiteral(secondArgument)) {
-            commentsExpression = firstArgument;
-            argumentExpressions[args[3]] = secondArgument;
-        }
-    }
+    const argumentExpressions = getArgumentExpressions(callArguments, argumentMapping, commentOptions);
+    let commentsExpression = argumentExpressions['comments'];
+
     if (argumentExpressions.text) {
         let message: IMessageData = {
             text: normalizeContent(argumentExpressions.text.text, contentOptions)
@@ -431,9 +244,9 @@ function extractArguments(
         }
         return message;
     }
+
     return null;
 }
-
 
 function getComments(
     objectLiteralExpression: ts.ObjectLiteralExpression,
@@ -444,18 +257,23 @@ function getComments(
     isProp: boolean = false,
     propsKeys?: string[]
 ): void {
+
     if (!propsKeys) {
         propsKeys = commentOptions.props ? Object.keys(commentOptions.props) : [];
     }
+
     if (commentOptions.throwWhenMalformed === undefined) {
         commentOptions.throwWhenMalformed = true;
     }
+
     const properties = objectLiteralExpression.properties;
+
     properties.forEach(property => {
         if (property.kind === ts.SyntaxKind.PropertyAssignment) {
             const key = (<string>(<ts.Identifier>(<ts.PropertyAssignment>property).name).escapedText);
             const value = checkAndConcatenateStrings((<ts.PropertyAssignment>property).initializer);
             const nextKey = prevKey !== undefined ? `${prevKey}.${key}` : key;
+
             if ([ts.SyntaxKind.StringLiteral, ts.SyntaxKind.NoSubstitutionTemplateLiteral].includes(value.kind)) {
                 const commentsArray = (<ts.NoSubstitutionTemplateLiteral>value).text.split('\n');
                 if (!prevKey && !isProp && key === commentOptions.commentString) {
@@ -468,7 +286,6 @@ function getComments(
                 } else {
                     comments.otherComments.push(...commentsArray.map(line => `${nextKey}: ${line}`));
                 }
-
             } else if (isObjectLiteralExpression(value)) {
                 if (!prevKey && (<string []>propsKeys).includes(key)) {
                     getComments(value, key, commentOptions, comments, message, true, propsKeys);
@@ -516,6 +333,18 @@ function isZeroNumericLiteral(expression: ts.Expression): expression is ts.Numer
 
 function isNullOrUndefined(expression: ts.Expression): boolean {
     return isNull(expression) || isUndefined(expression) || isZeroNumericLiteral(expression);
+}
+
+function isNullOrTextLiteral(expression: ts.Expression): boolean {
+    return isNullOrUndefined(expression) || isTextLiteral(expression);
+}
+
+function isNullOrObjectLiteralExpression(expression: ts.Expression): boolean {
+    return isObjectLiteralExpression(expression) || isNullOrUndefined(expression);
+}
+
+function isNullOrObjectLiteralOrTextLiteral(expression: ts.Expression): boolean {
+    return isNullOrObjectLiteralExpression(expression) || isTextLiteral(expression);
 }
 
 function createStringLiteral(text: string): ts.StringLiteral {
