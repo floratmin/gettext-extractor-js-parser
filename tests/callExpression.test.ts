@@ -154,7 +154,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                         comments: 5
                     },
                     comments: {
-                        commentString: 'comment', props: {props: ['{', '}']}
+                        commentString: 'comment', props: {props: ['{', '}']},
+                        fallback: true
                     }
                 });
                 parser.parseString(`i18n.gettext(something, 'Foo', somethingElse, 'Context', somethingDifferent, {comment: 'My Comment'})`);
@@ -1851,7 +1852,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             comments: 1
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Foo', {comment: 'My Comment'})`);
@@ -1892,7 +1894,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             text: 1
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t({comment: 'My Comment'}, 'Foo')`);
@@ -1933,7 +1936,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             comments: 2
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Foo', 'Plural', {comment: 'Comment'})`);
@@ -1995,7 +1999,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             textPlural: 2
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Foo', {comment: 'Comment'}, 'Plural')`);
@@ -2056,7 +2061,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             comments: 2
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Plural', 'Foo', {comment: 'Comment'})`);
@@ -2112,7 +2118,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             text: 2
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Context', {comment: 'Comment'}, 'Foo')`);
@@ -2173,7 +2180,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             textPlural: 2
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t({comment: 'Comment'}, 'Foo', 'Plural')`);
@@ -2238,7 +2246,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             text: 2
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t({comment: 'Comment'}, 'Plural', 'Foo')`);
@@ -2293,7 +2302,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             comments: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Foo', 'Plural', 'Context', {comment: 'Comment'})`);
@@ -2395,7 +2405,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             context: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Foo', 'Plural', {comment: 'Comment'}, 'Context')`);
@@ -2509,7 +2520,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             context: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Foo', {comment: 'Comment'}, 'Plural', 'Context')`);
@@ -2606,7 +2618,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             comments: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Plural', 'Foo', 'Context', {comment: 'Comment'})`);
@@ -2699,7 +2712,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             context: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Plural', 'Foo', {comment: 'Comment'}, 'Context')`);
@@ -2798,7 +2812,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             context: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t({comment: 'Comment'}, 'Foo', 'Plural', 'Context')`);
@@ -2915,7 +2930,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             comments: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Plural', 'Context', 'Foo', {comment: 'Comment'})`);
@@ -3001,7 +3017,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             context: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Plural', {comment: 'Comment'}, 'Foo', 'Context')`);
@@ -3130,7 +3147,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             context: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t({comment: 'Comment'}, 'Plural', 'Foo', 'Context')`);
@@ -3236,7 +3254,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             text: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Plural', 'Context', {comment: 'Comment'}, 'Foo')`);
@@ -3340,7 +3359,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             text: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t('Plural', {comment: 'Comment'}, 'Context', 'Foo')`);
@@ -3431,7 +3451,8 @@ describe('JS: Call Expression Extractor with comment function', () => {
                             text: 3
                         },
                         comments: {
-                            commentString: 'comment', props: {props: ['{', '}']}
+                            commentString: 'comment', props: {props: ['{', '}']},
+                            fallback: true
                         }
                     });
                     parser.parseString(`t({comment: 'Comment'}, 'Plural', 'Context', 'Foo')`);
